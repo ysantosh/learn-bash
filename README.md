@@ -1,20 +1,18 @@
 # bash-notes
 # Table of Contents
-
 - [Introduction](#introduction)
-- [Shells and modes](#shells-and-modes)
-  - [Interactive](#interactive-mode)
-  - [Non-interactive](#non-interactive-mode)
+- [Shells Basic](#shells-basic)
+  - [First program](#first-program)
   - [Exit codes](#exit-codes)
-- [Comments](#comments)
-- [Variables](#variables)
+  - [Comments](#comments)
+  - [Variables](#variables)
   - [Local variables](#local-variables)
   - [Environment variables](#environment-variables)
   - [Positional parameters](#positional-parameters)
 - [Shell expansions](#shell-expansions)
-  - [Brace expansion](#brace-expansion)
-  - [Command substitution](#command-substitution)
-  - [Arithmetic expansion](#arithmetic-expansion)
+  - [Curli Brace expansion](#curli-brace-expansion)
+  - [Parenthesis Command substitution](#parenthesis-command-substitution)
+  - [Single vs Double square braces](#single-vs-double-square-braces)
   - [Double and single quotes](#double-and-single-quotes)
 - [Arrays](#arrays)
   - [Array declaration](#array-declaration)
@@ -26,6 +24,7 @@
   - [Streams](#streams)
   - [Pipes](#pipes)
   - [Lists of commands](#lists-of-commands)
+  - [String Operations](#string-operations)
 - [Conditional statements](#conditional-statements)
   - [Primary and combining expressions](#primary-and-combining-expressions)
   - [Using an `if` statement](#using-an-if-statement)
@@ -36,78 +35,43 @@
   - [`until` loop](#until-loop)
   - [`select` loop](#select-loop)
   - [Loop control](#loop-control)
+- [Multithreading in bash](#multithreading-in-bash)
 - [Functions](#functions)
 - [Debugging](#debugging)
-- [Afterword](#afterword)
-- [Other resources](#other-resources)
-- [License](#license)
+- [Commands and Example](#command-and-example)
+  - [logname](#logname)
+  - [sed](#sed)
+- [Reference](#reference)
 
 # Introduction
 
-If you are a developer, then you know the value of time. Optimizing your work process is one of the most important aspects of the job.
-
-In that path towards efficiency and productivity, we are often posed with actions that must be repeated over and over again, like:
-
-* taking a screenshot and uploading it to a server
-* processing text that may come in many shapes and forms
-* converting files between different formats
-* parsing a program's output
-
-Enter **Bash**, our savior.
-
 Bash is a Unix shell written by [Brian Fox][] for the GNU Project as a free software replacement for the [Bourne shell](https://en.wikipedia.org/wiki/Bourne_shell). It was released in 1989 and has been distributed as the Linux and OS X default shell for a long time.
-
 [Brian Fox]: https://en.wikipedia.org/wiki/Brian_Fox_(computer_programmer)
 <!-- link this format, because some MD processors handle '()' in URLs poorly -->
 
-So why do we need to learn something that was written more than 30 years ago? The answer is simple: this _something_ is today one of the most powerful and portable tools for writing efficient scripts for all Unix-based systems. And that's why you should learn bash. Period.
-
-In this handbook, I'm going to describe the most important concepts in bash with examples. I hope this compendium will be helpful to you.
-
-# Shells and modes
-
-The user bash shell can work in two modes - interactive and non-interactive.
-
-## Interactive mode
-
-If you are working on Ubuntu, you have seven virtual terminals available to you.
-The desktop environment takes place in the seventh virtual terminal, so you can return to a friendly GUI
-using the `Ctrl-Alt-F7` keybinding.
-
-You can open the shell using the `Ctrl-Alt-F1` keybinding. After that, the familiar GUI will disappear and one of the virtual terminals will be shown.
-
-If you see something like this, then you are working in interactive mode:
-
-    user@host:~$
-
-Here you can enter a variety of Unix commands, such as `ls`, `grep`, `cd`, `mkdir`, `rm` and see the result of their execution.
-
-We call this shell interactive because it interacts directly with the user.
-
-Using a virtual terminal is not really convenient. For example, if you want to edit a document and execute another command at the same time, you are better off using virtual terminal emulators like:
-
-- [GNOME Terminal](https://en.wikipedia.org/wiki/GNOME_Terminal)
-- [Terminator](https://en.wikipedia.org/wiki/Terminator_(terminal_emulator))
-- [iTerm2](https://en.wikipedia.org/wiki/ITerm2)
-- [ConEmu](https://en.wikipedia.org/wiki/ConEmu)
-
-## Non-interactive mode
-
-In non-interactive mode, the shell reads commands from a file or a pipe and executes them. When the interpreter reaches the end of the file, the shell process terminates the session and returns to the parent process.
-
-Use the following commands for running the shell in non-interactive mode:
-
-    sh /path/to/script.sh
-    bash /path/to/script.sh
-
-In the example above, `script.sh` is just a regular text file that consists of commands the shell interpreter can evaluate and `sh` or `bash` is the shell's interpreter program. You can create `script.sh` using your preferred text editor (e.g. vim, nano, Sublime Text, Atom, etc).
-
-You can also simplify invoking the script by making it an executable file using the `chmod` command:
-
-
-    chmod +x /path/to/script.sh
-
-Additionally, the first line in the script must indicate which program it should use to run the file, like so:
+# Shells Basic
+Shell scripts are just a text file that consist of list of commands which are executed by shell interpreter sequentially.  
+For example - Get name of user and say hello
+```bash
+# interactive 
+echo -e " Enter name "
+read name
+echo "hello $name"
+```
+## First Program
+Put the below five line line in script.sh
+```
+# non-interactive 
+#! /bin/bash
+echo -e " Enter name "
+read name
+echo "hello $name"
+```
+add execute permission
+```bash
+chmod +x /path/to/script.sh
+```
+Note that the first line in the script must indicate which program it should use to run the file, like so:
 
 ```bash
 #!/bin/bash
@@ -127,18 +91,14 @@ Another way to use the shebang line is as follows:
 echo "Hello, world!"
 ```
 
-The advantage of this shebang line is it will search for the program (in this case `bash`) based on the `PATH` environment variable. This is often preferred over the first method shown above, as the location of a program on a filesystem cannot always be assumed. This is also useful if the `PATH` variable on a system has been configured to point to an alternate version of the program. For instance, one might install a newer version of `bash` while preserving the original version and insert the location of the newer version into the `PATH` variable. The use of `#!/bin/bash` would result in using the original `bash`, while `#!/usr/bin/env bash` would make use of the newer version.
-
+The advantage of this shebang line is it will search for the program (in this case `bash`) based on the `PATH` environment variable. 
 
 ## Exit codes
 
 Every command returns an **exit code** (**return status** or **exit status**). A successful command always returns `0` (zero-code), and a command that has failed returns a non-zero value (error code). Failure codes must be positive integers between 1 and 255.
 
-Another handy command we can use when writing a script is `exit`. This command is used to terminate the current execution and deliver an exit code to the shell. Running an `exit` code without any arguments, will terminate the running script and return the exit code of the last command executed before `exit`.
-
 When a program terminates, the shell assigns its **exit code** to the `$?` environment variable. The `$?` variable is how we usually test whether a script has succeeded or not in its execution.
 
-In the same way we can use `exit` to terminate a script, we can use the `return` command to exit a function and return an **exit code** to the caller. You can use `exit` inside a function too and this will exit the function _and_ terminate the program.
 
 # Comments
 
@@ -154,7 +114,7 @@ whoami
 
 > **Tip**: Use comments to explain what your script does and _why_.
 
-# Variables
+## Variables
 
 Like in most programming languages, you can also create variables in bash.
 
@@ -162,12 +122,12 @@ Bash knows no data types. Variables can contain only numbers or a string of one 
 
 ## Local variables
 
-**Local variables** are variables that exist only within a single script. They are inaccessible to other programs and scripts.
+**Local variables** are variables that exist only within a single script. 
 
 A local variable can be declared using `=` sign (as a rule, there **should not** be any spaces between a variable's name, `=` and its value) and its value can be retrieved using the `$` sign. For example:
 
 ```bash
-username="denysdovhan"  # declare variable
+username="santosh"  # declare variable
 echo $username          # display value
 unset username          # delete variable
 ```
@@ -233,24 +193,39 @@ _Expansions_ are performed on the command line after it has been split into _tok
 
 If you are interested, you can read [more about shell expansions](https://www.gnu.org/software/bash/manual/bash.html#Shell-Expansions).
 
-## Brace expansion
-
-Brace expansion allows us to generate arbitrary strings. It's similar to _filename expansion_. For example:
+## Curli Brace expansion
+{...} Brace expansion allows us to generate arbitrary strings. It's similar to _filename expansion_. For example:
 
 ```bash
 echo beg{i,a,u}n # begin began begun
 ```
-
 Also brace expansions may be used for creating ranges, which are iterated over in loops.
 
 ```bash
 echo {0..5} # 0 1 2 3 4 5
 echo {00..8..2} # 00 02 04 06 08
 ```
+{...} Braces are also used to execute a sequence of commands in the current shell context . For example:
+``` 
+{ echo "We failed"; exit 1; }  # both statement will execute. Similar to anonymous function.
+```
 
-## Command substitution
+${...} means return the value of the shell variable named in the braces. Braces ({}) are used to unambiguously identify variables
+```bash
+echo ${SHELL}
+name="santosh"
+echo $name_suffix      # no output as there is no variable name_suffix
+echo ${name}_suffix    # Return santosh_suffix
+```
+## Parenthesis Command substitution
+(...) Means run the commands listed in the parens in a *subshell*. For Example:
+```bash
+a=1; (a=2; echo "inside: a=$a"); echo "outside: a=$a"
+inside: a=2
+outside: a=1
+```
 
-Command substitution allow us to evaluate a command and substitute its value into another command or variable assignment. Command substitution is performed when a command is enclosed by ``` `` ``` or `$()`.  For example, we can use it as follows:
+$(...) - Command substitution allow us to evaluate a command and substitute its value into another command or variable assignment. Command substitution is performed when a command is enclosed by ``` `` ``` or `$()`.  For example, we can use it as follows:
 
 ```bash
 now=`date +%T`
@@ -260,7 +235,13 @@ now=$(date +%T)
 echo $now # 19:08:26
 ```
 
-## Arithmetic expansion
+((...)) - means perform arithmetic, possibly changing the values of shell variables, but don't return its result. For Example:
+```
+((a=2+3))     # No return of result but store value of a
+echo "a=$a"   # a=5
+
+```
+$((...)) Double-Parentheses Construct - Similar to the let command, the (( ... )) construct permits arithmetic expansion and evaluation. In its simplest form, a=$(( 5 + 3 )) would set a to 5 + 3, or 8. However, this double-parentheses construct is also a mechanism for allowing C-style manipulation of variables in Bash, for example, (( var++ )). 
 
 In bash we are free to do any arithmetical operations. But the expression must enclosed by `$(( ))` The format for arithmetic expansions is:
 
@@ -277,6 +258,37 @@ y=7
 echo $(( x + y ))     # 11
 echo $(( ++x + y++ )) # 12
 echo $(( x + y ))     # 13
+```
+Double parenthesis is also used for making c-sytle loops like
+```bash
+for ((a=1, b=1; a <= LIMIT ; a++, b++))
+or
+((a = 1))      # a=1
+# Double parentheses permit space when setting a variable, as in C.
+
+while (( a <= LIMIT ))   #  Double parentheses,
+do                       #+ and no "$" preceding variables.
+  # some additional steps
+  ((a += 1))             # let "a+=1"
+done
+```
+## Single vs Double square braces
+[ is POSIX  regular command with a weird name.
+[[ is a Bash extension  that makes parsing magical. It also allows uses of <, &&, || and () and string pattern matching like = and =~.
+```bash
+if [[ $ANSWER =~ ^y(es)?$ ]]
+```
+[[ allows to to use comparision operators  ==, !=, <, and > with anything. With [ it can be used for string only. 
+
+```bash
+if ![[ ${PATH} =~ ${TEMP} ]] ; then PATH=$PATH:$TEMP; fi
+```
+[[ is bash's improvemen so no unnecessary double quote is needed.
+```bash
+[[ -f $FILE ]]     # works
+or
+if [ -f "$FILE" ]  # posix format need quotes
+
 ```
 
 ## Double and single quotes
@@ -501,6 +513,13 @@ The _AND-list_ looks like this:
 # command2 will be executed if, and only if, command1 finishes successfully (returns 0 exit status)
 command1 && command2
 ```
+Example : Run a command with root if it is not running as root
+```bash
+# if whoami is not root then run it with sudo
+[ "$(whoami)" != "root" ] && exec sudo -- "$0" "$@"
+
+```
+
 
 The _OR-list_ has the form:
 
@@ -510,6 +529,18 @@ command1 || command2
 ```
 
 The return code of an _AND_ or _OR_ list is the exit status of the last executed command.
+
+## String operations
+
+| Expression      | Description                                  |
+| :------------:  | :------------------------------------------- |
+|  ${#str}        | Length of $str         | 
+| ${str:pos}      |  Extract substring from $str at $pos | 
+| ${str:pos:len}  | Extract $len chars from $str at $pos |
+| ${str/sub/rep}  | Replace first match of $sub with $rep |
+| ${str//sub/rep} |  Replace all matches of $sub with $rep |
+| ${str/#sub/rep} | If $sub matches front end of $str, substitute $rep for $sub |
+| ${str/%sub/rep} | If $sub matches back end of $str, substitute $rep for $sub|
 
 # Conditional statements
 
@@ -574,23 +605,25 @@ Sure, there are more useful primaries and you can easily find them in the [Bash 
 `if` statements work the same as in other programming languages. If the expression within the braces is true, the code between `then` and `fi` is executed.  `fi` indicates the end of the conditionally executed code.
 
 ```bash
-# Single-line
-if [[ 1 -eq 1 ]]; then echo "true"; fi
-
-# Multi-line
-if [[ 1 -eq 1 ]]; then
-  echo "true"
+SYNTAX
+if [ condition ]   # true = 0
+then
+  # condition is true
+elif [ condition1 ] ; then
+  # condition1 is true
+elif [ condition2 ] ; then
+  # condition2 is true
+else
+  # None of the conditions is true
 fi
 ```
-
-Likewise, we could use an `if..else` statement such as:
-
+For example :
 ```bash
-# Single-line
-if [[ 2 -ne 1 ]]; then echo "true"; else echo "false"; fi
+if [[ 2 -eq 2 ]]; then
+  echo "true"
+fi
 
-# Multi-line
-if [[ 2 -ne 1 ]]; then
+if [[ 2 -ne 3 ]]; then
   echo "true"
 else
   echo "false"
@@ -602,12 +635,12 @@ Sometimes `if..else` statements are not enough to do what we want to do. In this
 Look at the example below:
 
 ```bash
-if [[ `uname` == "Adam" ]]; then
-  echo "Do not eat an apple!"
-elif [[ `uname` == "Eva" ]]; then
-  echo "Do not take an apple!"
+if [[ `uname` == "Linux" ]]; then
+  echo "Linux"
+elif [[ `uname` == "unix" ]]; then
+  echo "unix"
 else
-  echo "Apples are delicious!"
+  echo "neither linux nor unix"
 fi
 ```
 
@@ -630,6 +663,38 @@ case "$extension" in
     echo "Woops! It's not image!"
   ;;
 esac
+```
+Example : Take argument in bash and assign it to variable using case (simulation of perl optget)
+```bash
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+    -h|--help)
+    print_help
+    exit $STATE_OK
+    ;;
+    -p|--process)
+    process="$2"
+    shift # past argument
+    ;;
+    -d|--dockername)
+    docker_name="$2"
+    shift # past argument
+    ;;
+    -c|--critical)
+    critical="$2"
+    shift # past argument
+    ;;
+    --default)
+    DEFAULT=YES
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+shift # past argument or value
+done
 ```
 
 Each case is an expression matching a pattern. The `|` sign is used for separating multiple patterns, and the `)` operator terminates a pattern list. The commands for the first match are executed. `*` is the pattern for anything else that doesn't match the defined patterns. Each block of commands should be divided with the `;;` operator.
@@ -675,6 +740,21 @@ done
 for FILE in $HOME/*.bash; do
   mv "$FILE" "${HOME}/scripts"
   chmod +x "${HOME}/scripts/${FILE}"
+done
+```
+```
+# remove only files beginning with j or x
+for file in [jx]*
+do
+  rm -f $file    # Removes only files beginning with "j" or "x" in $PWD.
+  echo "Removed file \"$file\"".
+done
+```
+Omitting the in [list] part of a for loop causes the loop to operate on $@ -- the positional parameters.
+```
+for a
+do
+ echo -n "$a "
 done
 ```
 
@@ -879,30 +959,42 @@ set +x
 echo "xtrace is turned off again"
 ```
 
-# Afterword
+# Multithreading in bash
+Mutlit-threadhing in bash is achieved by pushing command to background. For example.
 
-I hope this small handbook was interesting and helpful. To be honest, I wrote this handbook for myself so as to not forget the bash basics. I tried to write concisely but meaningfully, and I hope you will appreciate that.
+Spawn a child process and wait for it and kill if it doesn't die after specific time.
+```bash
+#Spawn a child process:
+(dosmth) & pid=$!
+#in the background, sleep for 10 secs then kill that process
+(sleep 10 && kill -9 $pid) &
+```
+ 
+Spawn a child process and get the exit status as well
+```bash
+#spawn a child
+(dosmth) & pid=$!        
+# in the background, sleep for 10 secs then kill that process
+(sleep 10 && kill -9 $pid) & waiter=$!
+# wait on our worker process and return the exitcode
+exitcode=$(wait $pid && echo $?)
+# kill the waiter subshell, if it still runs
+kill -9 $waiter 2>/dev/null
+# 0 if we killed the waiter, cause that means the process finished before the waiter
+finished_gracefully=$?
+```
 
-This handbook narrates my own experience with Bash. It does not purport to be comprehensive, so if you still want more, please run `man bash` and start there.
+# Commands and Example
+## logname
+```bash
+# Get the actual username who is running the command after sudo
+my $username=`logname`||`who am i | awk '{print $1}'`;
+```
+## sed
+```bash
+#sed example
+```
 
-Contributions are absolutely welcome and I will be grateful for any corrections or questions you can send my way. For all of that create a new [issue](https://github.com/denysdovhan/bash-handbook/issues).
-
-Thanks for reading this handbook!
-
-# Want to learn more?
-
-Here's a list of other literature covering Bash:
-
-* Bash man page.  In many environments that you can run Bash, the help system `man` can display information about Bash, by running the command `man bash`.  For more information on the `man` command, see the web page ["The man Command"](http://www.linfo.org/man.html) hosted at [The Linux Information Project](http://www.linfo.org/).
-* ["Bourne-Again SHell manual"](https://www.gnu.org/software/bash/manual/) in many formats, including HTML, Info, TeX, PDF, and Texinfo.  Hosted at <https://www.gnu.org/>.  As of 2016/01, this covers version 4.3, last updated 2015/02/02.
-
-# Other resources
-
-* [awesome-bash](https://github.com/awesome-lists/awesome-bash) is a curated list of Bash scripts and resources
-* [awesome-shell](https://github.com/alebcay/awesome-shell) is another curated list of shell resources
-* [bash-it](https://github.com/Bash-it/bash-it) provides a solid framework for using, developing and maintaining shell scripts and custom commands for your daily work.
-* [dotfiles.github.io](http://dotfiles.github.io/) is a good source of pointers to the various dotfiles collections and shell frameworks available for bash and other shells.
-* [learnyoubash](https://github.com/denysdovhan/learnyoubash) helps you write your first bash script
-* [shellcheck](https://github.com/koalaman/shellcheck) is a static analysis tool for shell scripts. You can either use it from a web page at [www.shellcheck.net](http://www.shellcheck.net/) or run it from the command line. Installation instructions are on the [koalaman/shellcheck](https://github.com/koalaman/shellcheck) github repository page.
-
-Finally, Stack Overflow has many questions that are [tagged as bash](https://stackoverflow.com/questions/tagged/bash) that you can learn from and is a good place to ask if you're stuck.
+# Reference
+* [bash-handbook](https://github.com/denysdovhan/bash-handbook)
+* [Advance bash scripting Guide](http://tldp.org/LDP/abs/html/)
