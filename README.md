@@ -36,6 +36,7 @@
   - [`select` loop](#select-loop)
   - [Loop control](#loop-control)
 - [Multithreading in bash](#multithreading-in-bash)
+  - [Example four instance ](#example-four-instance)   
 - [Functions](#functions)
 - [Debugging](#debugging)
 - [Commands and Example](#command-and-example)
@@ -983,6 +984,33 @@ kill -9 $waiter 2>/dev/null
 # 0 if we killed the waiter, cause that means the process finished before the waiter
 finished_gracefully=$?
 ```
+## Example four instance
+```bash
+This script runs four instance of load.sh in a loop:
+     #!/bin/bash
+
+     thread=4
+     script="load.sh"
+     logfile="load.log"
+     runfile="/tmp/.run.$$"
+
+     pids=( )
+
+     while [[ $thread -gt 0 ]]; do       # while ($thread -gt 0) {spawn a process and put in background}
+       (
+         while [[ -f "${runfile}" ]]; do
+           $script
+         done >> "${logfile}.${thread}"
+       ) &
+       pids=( "${pids[@]}" $! )
+       thread=$(( $thread - 1 ))
+     done
+
+     trap 'rm -f "${runfile}"' INT EXIT
+     wait
+     # kill if any still running
+     kill "${pids[@]}"
+```
 
 # Commands and Example
 ## logname
@@ -998,3 +1026,4 @@ my $username=`logname`||`who am i | awk '{print $1}'`;
 # Reference
 * [bash-handbook](https://github.com/denysdovhan/bash-handbook)
 * [Advance bash scripting Guide](http://tldp.org/LDP/abs/html/)
+* [Bash quick reference](http://www.disi.unige.it/person/MoggiE/PG1-13/bash.quickref.pdf)
