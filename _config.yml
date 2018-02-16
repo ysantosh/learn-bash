@@ -2,7 +2,3 @@ theme: jekyll-theme-cayman
 title: Bash documentation
 description: Notes while learning bash
 markdown: kramdown
-plugins:
-  - jekyll-redirect-from
-  - jekyll-sitemap
-  - jekyll-toc
