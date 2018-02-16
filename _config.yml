@@ -1,3 +1,7 @@
 theme: jekyll-theme-cayman
 title: Bash documentation
 description: Notes while learning bash
+plugins:
+  - jekyll-redirect-from
+  - jekyll-sitemap
+  - jekyll-toc
